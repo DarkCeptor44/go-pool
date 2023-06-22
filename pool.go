@@ -26,7 +26,7 @@ type Result struct {
 }
 
 // Pool task has to be this format
-type Task func(index int, value Value) Result
+type Task func(index int, total int, value Value) Result
 
 func init() {
 	rand.NewSource(time.Now().UnixNano())
@@ -45,6 +45,8 @@ func NewPool(numWorkers int, task Task, values []Value) *Pool {
 
 // Executes the task on the pool with amount of workers specified and returns a list of results
 func (p *Pool) Run() []Result {
+	total := len(p.values)
+	n := 0
 	for {
 		p.valuesLock.Lock()
 		if len(p.values) == 0 {
@@ -54,19 +56,20 @@ func (p *Pool) Run() []Result {
 
 		workerCount := min(p.numWorkers, len(p.values))
 		for i := 0; i < workerCount; i++ {
+			n++
 			index := rand.Intn(len(p.values))
 			val := p.values[index]
 			p.values = removeIndex(p.values, index)
 
 			p.wg.Add(1)
-			go func(index int, value Value) {
+			go func(n int, total int, value Value) {
 				defer p.wg.Done()
-				res := p.task(index, value)
+				res := p.task(n, total, value)
 
 				p.resultsLock.Lock()
 				p.results = append(p.results, res)
 				p.resultsLock.Unlock()
-			}(i, val)
+			}(n, total, val)
 		}
 		p.valuesLock.Unlock()
 	}
