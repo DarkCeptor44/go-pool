@@ -17,7 +17,7 @@ import (
     "github.com/DarkCeptor44/go-pool"
 )
 
-func multiply(i int, value pool.Value) pool.Result {
+func multiply(current int, total int, value pool.Value) pool.Result {
  n := value.Int() * 2
 
  return pool.Result{

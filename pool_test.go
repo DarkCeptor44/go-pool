@@ -1,6 +1,7 @@
 package pool
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 func TestFactorial(t *testing.T) {
 	arr := getRandomSlice(10, 20, 50)
-	p := NewPool(10, func(index int, value Value) Result {
+	p := NewPool(10, func(_ int, _ int, value Value) Result {
 		n := factorial(value.Int())
 		return Result{
 			Old: value,
@@ -32,6 +33,21 @@ func TestFactorial(t *testing.T) {
 	}
 
 	t.Logf("Done in %s\n", elapsed)
+}
+
+func TestFiles(t *testing.T) {
+	arr := []string{}
+	for i := 0; i < 10; i++ {
+		arr = append(arr, fmt.Sprintf("file%d.txt", i+1))
+	}
+
+	p := NewPool(4, func(current int, total int, value Value) Result {
+		val := value.String()
+		t.Logf("Manipulating file '%s' (%d/%d)\n", val, current, total)
+		return Result{}
+	}, FromSlice[string](arr))
+
+	p.Run()
 }
 
 func factorial(n int) int {
